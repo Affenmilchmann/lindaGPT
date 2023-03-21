@@ -1,0 +1,10 @@
+services:
+  anekgpt-flask:
+    image: anekgpt-flask
+    cpus: 1
+    mem_limit: 1024m
+    container_name: anekgpt-flask
+    build:
+      context: ./web
+    ports:
+      - 5678:5000
