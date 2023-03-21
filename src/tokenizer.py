@@ -8,7 +8,7 @@ logging.basicConfig(format='Tokenizer:\t%(asctime)s %(message)s', datefmt='[%H:%
 def is_a_word(token: str) -> bool:
     return re_match(r'^[а-я]+$', token)
 
-def remove_low_frequent(tokens: list, threshold: int = 2):
+def remove_low_frequent(tokens: list, threshold: int = 5):
     logging.info("Counting frequencies")
     freq_map = {}
     for tkn in tqdm(tokens):
@@ -25,9 +25,9 @@ def tokenize_text(text: str) -> list:
     text = text.lower()
     text = re_sub(r'([^а-яА-Яё ])', ' \g<1> ', text)
     text = re_sub(r' +', ' ', text)
-    text = re_sub(r'\n ', '\n', text)
 
-    tokens = []
+    tokens = text.split(' ')
+    tokens = remove_low_frequent(tokens)
 
     """ for tkn in text.split():
         if is_a_word(tkn):
@@ -36,7 +36,7 @@ def tokenize_text(text: str) -> list:
         else:
             tokens.append(tkn) """
 
-    return remove_low_frequent(text.split())
+    return tokens
 
 if __name__ == "__main__":
     with open('data/anekdots.txt', 'r', encoding='utf-8') as f_in:

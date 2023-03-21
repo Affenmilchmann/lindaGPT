@@ -41,7 +41,7 @@ def get_config():
 
     # trainer
     C.trainer = Trainer.get_default_config()
-    C.trainer.learning_rate = 5e-4 # 5e-4
+    C.trainer.learning_rate = 2e-4 # 5e-4 0.0005
 
     return C
 
@@ -104,7 +104,7 @@ if __name__ == '__main__':
     set_seed(config.system.seed)
 
     # construct the training dataset
-    text = open(input_file, 'r').read() # don't worry we won't run out of file handles
+    text = open(input_file, 'r', encoding='utf-8').read() # don't worry we won't run out of file handles
     train_dataset = CharDataset(config.data, text)
 
     # construct the model
@@ -118,17 +118,17 @@ if __name__ == '__main__':
     # iteration callback
     def batch_end_callback(trainer):
 
-        if trainer.iter_num % 10 == 0:
-            logging.info(f"iter_dt {trainer.iter_dt * 1:.2f}s; iter {trainer.iter_num}: train loss {trainer.loss.item():.5f}")
+        if trainer.iter_num % 100 == 0:
+            logging.info(f"iter {trainer.iter_num}: train loss {trainer.loss.item():.5f}")
 
-        if trainer.iter_num % 20 == 0:
+        if trainer.iter_num % 500 == 0:
             # evaluate both the train and test score
             model.eval()
             with torch.no_grad():
                 # sample from the model...
                 context = "штирлиц"
                 x = torch.tensor([train_dataset.stoi[s] for s in context.split()], dtype=torch.long)[None,...].to(trainer.device)
-                y = model.generate(x, 100, temperature=1.0, do_sample=True, top_k=10)[0]
+                y = model.generate(x, 25, temperature=1.0, do_sample=True, top_k=10)[0]
                 completion = ' '.join([train_dataset.itos[int(i)] for i in y])
                 print(completion)
             # save the latest model

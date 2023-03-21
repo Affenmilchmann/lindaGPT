@@ -18,12 +18,13 @@ def date_generator(start="2001-01-01",end="2023-03-20", step=timedelta(days=1)):
     """both `start` and `end` are included"""
     start_dt = datetime.strptime(start, "%Y-%m-%d")
     end_dt = datetime.strptime(end, "%Y-%m-%d")
+    delta = end_dt - start_dt
     it: datetime = start_dt
 
-    pb = tqdm()
+    pb = tqdm(total=delta.days)
 
     while it <= end_dt:
-        pb.set_description(f'{it.strftime("%y%m%d")} / {end_dt.strftime("%y%m%d")}')
+        pb.set_description(f'{it.strftime("%d.%m.%Y")} / {end_dt.strftime("%d.%m.%Y")}')
         pb.update(1)
         yield it.strftime("%y%m%d")
         it += step
@@ -65,5 +66,5 @@ def write_to_file(texts: list):
         for text in texts:
             f.write(f"{delimeter}\n{text}\n")
 
-for it in date_generator(start="2022-03-20"):
+for it in date_generator(start="2001-01-01"):
     write_to_file(parse_html(base_url.format(date=it)))
