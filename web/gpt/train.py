@@ -10,7 +10,6 @@ logging.basicConfig(format='%(asctime)s %(message)s', datefmt='[%H:%M:%S]', leve
 
 import torch
 from torch.utils.data import Dataset
-from torch.utils.data.dataloader import DataLoader
 
 from mingpt.model import GPT
 from mingpt.trainer import Trainer
@@ -19,7 +18,13 @@ from mingpt.utils import set_seed, setup_logging, CfgNode as CN
 # -----------------------------------------------------------------------------
 
 from src.tokenizer import tokenize_text
-from src.path_handler import data_file, itos_file, stoi_file, data_dir
+from src.path_handler import data_file, itos_file, stoi_file, data_dir, model_file
+
+# trying to make my potatoe pc work
+torch.cuda.empty_cache()
+torch.cuda.set_per_process_memory_fraction(0.25)
+#os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "backend:native,max_split_size_mb:32"
+
 
 # --------This part is not mine------------------------------------------------
 
@@ -41,7 +46,8 @@ def get_config():
 
     # trainer
     C.trainer = Trainer.get_default_config()
-    C.trainer.learning_rate = 2e-4 # 5e-4 0.0005
+    C.trainer.learning_rate = 5e-4 # 5e-4 0.0005
+    C.trainer.batch_size = 16
 
     return C
 
@@ -114,6 +120,12 @@ if __name__ == '__main__':
     config.model.vocab_size = train_dataset.get_vocab_size()
     config.model.block_size = train_dataset.get_block_size()
     model = GPT(config.model)
+    do_continue = input("Overwrite the old model? (y/any)\n >> ").lower()
+    if do_continue == 'y':
+        logging.info(f"Training a new model from start")
+    else:
+        logging.info(f"Loading model's weights")
+        model.load_state_dict(torch.load(model_file))
 
     # construct the trainer object
     trainer = Trainer(config.trainer, model, train_dataset)
@@ -121,23 +133,23 @@ if __name__ == '__main__':
     # iteration callback
     def batch_end_callback(trainer):
 
-        if trainer.iter_num % 10 == 0:
-            logging.info(f"iter {trainer.iter_num}: train loss {trainer.loss.item():.5f}")
+        if trainer.iter_num % 5_000 == 0:
+            logging.info(f"iter {trainer.iter_num}: train loss {trainer.loss.item():.5f}. Saving model")
+            # save the latest model
+            ckpt_path = os.path.join(config.system.work_dir, "model.pt")
+            torch.save(model.state_dict(), ckpt_path)
 
-        if trainer.iter_num % 50 == 0:
+        if trainer.iter_num % 20_000 == 0:
+            return
             # evaluate both the train and test score
             model.eval()
             with torch.no_grad():
                 # sample from the model...
-                context = "штирлиц"
-                x = torch.tensor([train_dataset.stoi[s] for s in context.split()], dtype=torch.long)[None,...].to(trainer.device)
+                context = "\n"
+                x = torch.tensor([train_dataset.stoi[s] for s in context.split(' ')], dtype=torch.long)[None,...].to(trainer.device)
                 y = model.generate(x, 25, temperature=1.0, do_sample=True, top_k=10)[0]
                 completion = ' '.join([train_dataset.itos[int(i)] for i in y])
-                print(completion)
-            # save the latest model
-            print("saving model")
-            ckpt_path = os.path.join(config.system.work_dir, "model.pt")
-            torch.save(model.state_dict(), ckpt_path)
+                print(completion.strip())
             # revert model to training mode
             model.train()
 

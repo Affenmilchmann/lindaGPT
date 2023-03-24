@@ -1,1 +1,1 @@
-/home/kesha/dev/uni/linda/gpt_proj/web/gpt/train.py
+.\web\gpt\train.py

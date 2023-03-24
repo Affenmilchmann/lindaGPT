@@ -6,24 +6,25 @@ from json import load
 import logging
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='[%H:%M:%S]', level=logging.INFO)
 
-from train import CharDataset, get_config
+from train import get_config
 from src.path_handler import model_file, stoi_file, itos_file
-
-glob_cfg = get_config()
-cfg = glob_cfg.model
-cfg.vocab_size = 11056
-cfg.block_size = 128
-
-model = GPT(cfg)
-model.load_state_dict(torch.load(model_file))
-
-""" with open(data_file, 'r') as f:
-    train_dataset = CharDataset(glob_cfg.data, f.read()) """
 
 with open(stoi_file, 'r', encoding='utf-8') as f:
     stoi = load(f)
 with open(itos_file, 'r', encoding='utf-8') as f:
     itos = load(f)
+
+if len(stoi) != len(itos):
+    logging.critical(f"stoi and itos lenghts are different. {len(stoi)} and {len(itos)}")
+    quit()
+
+glob_cfg = get_config()
+cfg = glob_cfg.model
+cfg.vocab_size = len(stoi)
+cfg.block_size = 128
+
+model = GPT(cfg)
+model.load_state_dict(torch.load(model_file))
 
 logging.info(f"Loaded dictionaries stoi and itos with sizes of {len(stoi)} and {len(itos)}")
 
@@ -47,7 +48,7 @@ def generate_tail(prompt='', steps=1, do_sample=True):
     out = ' '.join(all_tokens[-steps:])
     return out
 
-def generate_segment(context='-', stop_flag='\n \n'):
+def generate_segment(context='\n \n', stop_flag='\n \n'):
     text = context
     flag = False
     while not (flag and text.endswith(stop_flag)):

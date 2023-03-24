@@ -1,7 +1,7 @@
 {
     "system": {
         "seed": 3407,
-        "work_dir": "/home/kesha/dev/uni/linda/gpt_proj/web/gpt/data"
+        "work_dir": "C:\\Users\\Kesha\\dev\\lindaGPT\\web\\gpt\\data"
     },
     "data": {
         "block_size": 128
@@ -19,10 +19,10 @@
     },
     "trainer": {
         "device": "auto",
-        "num_workers": 2,
+        "num_workers": 1,
         "max_iters": null,
-        "batch_size": 64,
-        "learning_rate": 0.0002,
+        "batch_size": 16,
+        "learning_rate": 0.0005,
         "betas": [
             0.9,
             0.95

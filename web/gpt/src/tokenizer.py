@@ -8,7 +8,7 @@ logging.basicConfig(format='Tokenizer:\t%(asctime)s %(message)s', datefmt='[%H:%
 def is_a_word(token: str) -> bool:
     return re_match(r'^[а-я]+$', token)
 
-def remove_low_frequent(tokens: list, threshold: int = 10):
+def remove_low_frequent(tokens: list, threshold: int = 64):
     logging.info("Counting frequencies")
     freq_map = {}
     for tkn in tqdm(tokens):
@@ -23,7 +23,7 @@ def tokenize_text(text: str) -> list:
     morph = MorphAnalyzer()
     
     text = text.lower()
-    text = re_sub(r'([^а-яА-Яё ])', ' \g<1> ', text)
+    text = re_sub(r'([^а-яa-zё ])', ' \g<1> ', text)
     text = re_sub(r' +', ' ', text)
 
     tokens = text.split(' ')
